@@ -47,7 +47,7 @@ jobs:
         with:
           target: x86_64
           args: --release --out dist -i 3.12 3.13 3.14
-          manylinux: auto
+          manylinux: 2014
 
       - name: Upload wheel artifacts
         uses: actions/upload-artifact@v4
