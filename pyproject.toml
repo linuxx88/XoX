@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "project-xox"
-version = "0.1.0"
+version = "0.1.1"
 description = "Tri-state epistemic uncertainty engine preserving explicit True, False, and Unknown decision semantics"
 readme = "README.md"
 requires-python = ">=3.12"
