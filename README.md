@@ -16,6 +16,12 @@ XoX provides a principled tri-state logical model where uncertainty is preserved
 
 ## Semantic Model
 
+A permission may be granted, denied, or impossible to determine because the identity provider isn't responding.
+
+> Pierre hadn't planned for Tuesday.
+
+The outage does not make the permission `FALSE`. It makes its current truth value `UNKNOWN`.
+
 XoX represents three distinct, immutable logical states:
 
 - **`xox.TRUE`**: The proposition is definitively established as true.
@@ -69,13 +75,9 @@ if u.is_unknown():
 
 ---
 
-## Strict Domain Separation & Truthiness Prohibition
+## UNKNOWN refuses to pretend it's a bool.
 
-Python `bool` and `xox.XoX` belong to strictly separated domains. Crossing between them requires explicit operations.
-
-### Truthiness is Prohibited
-
-XoX values prohibit direct boolean coercion (`__bool__`). Evaluating an `XoX` instance in an `if`, `while`, `bool()`, `and`, `or`, or `not` context raises a `TypeError`:
+XoX rejects direct Boolean coercion instead of silently choosing `True` or `False`.
 
 ```python
 val = xox.UNKNOWN
@@ -186,7 +188,8 @@ def verify_remote_entitlement(user_id: str) -> xox.XoX:
             # Service responded, but entitlement status is indeterminate
             return xox.UNKNOWN
     except NetworkTimeoutError:
-        # Runtime transport failure is handled by application logic
+        # The timeout is an operational event. This application chooses to map
+        # that event to UNKNOWN because the entitlement can no longer be established.
         return xox.UNKNOWN
 
 def handle_user_request(user_id: str):
@@ -231,11 +234,26 @@ Advanced capabilities (such as auditable policy tokens, evidence provenance trac
 
 - **Python Interpreters:** CPython 3.12, 3.13, and 3.14 (version-specific CPython extension wheels).
 - **Supported Platform:** Linux x86_64.
-- **Binary Compatibility Baseline:** `manylinux_2_34_x86_64` (glibc 2.34+).
+- **Binary Compatibility Baseline:** `manylinux2014_x86_64` / `manylinux_2_17_x86_64` (glibc 2.17+).
 - **Source Build MSRV:** Rust 1.83+.
 - **Unclaimed / Unsupported:** macOS, Windows, Linux aarch64, musllinux, PyPy, GraalPy, and free-threaded CPython builds are not currently claimed or supported.
 
 > **Note**: The binary compatibility baseline reflects the currently audited distribution artifact floor, not an intrinsic semantic limitation of XoX logic.
+
+---
+
+## External adversarial evaluation
+
+This is an external integration campaign against the published package, not the repository's official test suite or exhaustive proof.
+
+| Boundary | Pressure applied | Observed result | Scope boundary |
+|---|---|---|---|
+| Boolean coercion | `if`, `bool()`, ordinary truthiness | Direct coercion was rejected with `TypeError` | Host Python can still explicitly catch errors or write its own fallback policy |
+| Strong Kleene laziness | RHS side effects, exceptions, nesting | Skipped RHS executed zero times; required RHS executed once in the exercised cases | This is an external observation, not a replacement for the repository's official test suite |
+| Operational failure vs. uncertainty | Exceptions, timeout-like failures, malformed host values | Failures were not intrinsically equivalent to `UNKNOWN` | Any translation from an operational failure to `UNKNOWN` is application policy |
+| Temporal / multi-source state | Changing observations, stale values, conflicting producers | XoX operated on the values supplied without adding freshness, snapshot, provenance, or arbitration semantics | Those concerns remain host-architecture responsibilities |
+
+These observations are intentionally narrower than a proof claim: they show where the published `project-xox` 0.1.0 behavior remained stable under the exercised integrations, and where responsibility clearly returns to ordinary Python application design.
 
 ---
 
